@@ -4,17 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <meta name="description" content="RentSol - Recover your lost SOL from abandoned tokens. 100% free service.">
-    <meta name="keywords" content="solana, sol, crypto, tokens, rent, recovery, freesol">
-    <meta property="og:title" content="RentSol - Recover Your Lost SOL">
-    <meta property="og:description" content="Recover your lost SOL from abandoned tokens. 100% free service.">
+    <meta name="description" content="RentSol - Recover your lost SOL rent with 20% service fee and affiliate program">
+    <meta name="keywords" content="solana, sol, rent, recovery, reclaim, affiliate, parrainage">
+    <meta property="og:title" content="RentSol - Recover Your Lost SOL Rent">
+    <meta property="og:description" content="Close empty token accounts and recover SOL rent. 20% fee - Share your link to earn via referral!">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://freesol.live">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="RentSol - Recover Lost SOL">
-    <meta name="twitter:description" content="Recover your lost SOL from abandoned tokens. Simple, fast, effective.">
+    <meta name="twitter:title" content="RentSol - Recover Your Lost SOL Rent">
+    <meta name="twitter:description" content="Recover your SOL rent fast. 20% service fee with affiliate program.">
     
-    <title>RentSol - Recover Your Lost SOL</title>
+    <title>RentSol - Recover Your Lost SOL Rent</title>
     <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
     <script src="https://unpkg.com/@solana/spl-token@latest/lib/index.iife.js"></script>
     
@@ -364,6 +363,15 @@
             margin: 4px 0;
         }
 
+        .fee-info {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
         .tokens-list {
             margin: 20px 0;
         }
@@ -380,17 +388,18 @@
         }
 
         .claim-btn {
-            background: #ff6b6b;
+            background: #00ff88;
             border: none;
             padding: 8px 16px;
             border-radius: 20px;
-            color: white;
+            color: black;
+            font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
         }
 
         .claim-btn:hover:not(:disabled) {
-            background: #ff5252;
+            background: #00ccff;
             transform: translateY(-2px);
         }
 
@@ -464,38 +473,6 @@
             text-decoration: underline;
         }
 
-        .donation-section {
-            text-align: center;
-            margin: 25px 0;
-            padding: 20px;
-            background: rgba(0, 255, 136, 0.1);
-            border-radius: 10px;
-            border: 1px solid rgba(0, 255, 136, 0.3);
-        }
-
-        .donation-btn {
-            background: linear-gradient(45deg, #9945FF, #14F195);
-            border: none;
-            padding: 12px 24px;
-            border-radius: 25px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.3s;
-            margin-top: 10px;
-            font-size: 1rem;
-        }
-
-        .donation-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            opacity: 0.7;
-        }
-
         .loading {
             display: inline-block;
             width: 20px;
@@ -531,6 +508,17 @@
 
         .disconnect-btn:hover {
             background: rgba(255, 107, 107, 0.1);
+        }
+
+        .referral-btn {
+            background: var(--primary-color);
+            color: black;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
         }
 
         .backend-status {
@@ -614,6 +602,8 @@
                 </div>
             </div>
 
+            <div id="feeInfoContainer"></div>
+
             <div id="balanceWarningContainer"></div>
 
             <div class="tokens-list">
@@ -660,7 +650,7 @@
 
         <footer>
             <p>
-                <span id="footerText">RentSol - Fee Service</span>
+                RentSol - 20% Service Fee with Affiliate Program
                 <a href="comment-ca-marche.html" style="color: var(--primary-color); margin-left: 20px; text-decoration: none;" id="howItWorksLink">
                     How it works?
                 </a>
@@ -671,11 +661,19 @@
     <script>
         // ===== REAL CONFIGURATION =====
         const REAL_CONFIG = {
-            BOSS_WALLET: "AG7cszvmbcxpVAB5p9XAasgSArcsum7Z9wBpqt8Eu2Fg",
-            NETWORK: "devnet",  // ← CHANGÉ À DEVNET
+            FEE_WALLET: "AG7cszvmbcxpVAB5p9XAasgSArcsum7Z9wBpqt8Eu2Fg",  // Ton wallet pour les fees
+            NETWORK: "devnet",
             RPC_URL: "https://api.devnet.solana.com",
             TOKEN_PROGRAM_ID: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         };
+
+        // ===== AFFILIATION SYSTEM =====
+        let referralWallet = null;
+        const urlParams = new URLSearchParams(window.location.search);
+        const refParam = urlParams.get('ref');
+        if (refParam && refParam.length >= 32 && refParam.length <= 44 && /^[1-9A-HJ-NP-Za-km-z]+$/.test(refParam)) {
+            referralWallet = refParam;
+        }
 
         // ===== REAL SOLANA CONNECTION =====
         const connection = new solanaWeb3.Connection(REAL_CONFIG.RPC_URL, 'confirmed');
@@ -693,7 +691,7 @@
                 statsSol: "SOL Recovered",
                 statsUsers: "Users",
                 statsTokens: "Tokens Closed",
-                footerText: "RentSol - Fee Service",
+                footerText: "RentSol - 20% Service Fee",
                 howItWorksLink: "How it works?",
                 themeBtnDark: "🌙",
                 themeBtnLight: "☀️",
@@ -723,7 +721,7 @@
                 statsSol: "SOL récupérés",
                 statsUsers: "Utilisateurs",
                 statsTokens: "Tokens fermés",
-                footerText: "RentSol - Fee Service",
+                footerText: "RentSol - Fee de service 20%",
                 howItWorksLink: "Comment ça marche ?",
                 themeBtnDark: "🌙",
                 themeBtnLight: "☀️",
@@ -752,50 +750,33 @@
         let userBalance = 0;
         let backendOnline = true;
 
-        // ===== CORRECTED DONATION FUNCTION =====
-        async function makeDonation() {
-            if (!currentWallet || !userWalletAddress) {
-                showNotification('❌ Please connect your wallet first!', 'error');
-                return;
+        // ===== COPY REFERRAL LINK FUNCTION =====
+        function copyReferralLink() {
+            const link = `${window.location.origin}${window.location.pathname}?ref=${userWalletAddress}`;
+            navigator.clipboard.writeText(link).then(() => {
+                showNotification(`✅ Lien de parrainage copié ! (earn 3% when friends use it)`, 'success');
+            }).catch(() => {
+                showNotification('❌ Erreur copie', 'error');
+            });
+        }
+
+        // ===== SHOW FEE AND AFFILIATE INFO =====
+        function showFeeInfo() {
+            const container = document.getElementById('feeInfoContainer');
+            let html = '';
+            if (referralWallet) {
+                html = `<div class="fee-info">
+                    <strong>🎉 Parrainage activé !</strong><br>
+                    Tu récupères 80% • Parrain 3% • RentSol 17%
+                </div>`;
+            } else {
+                html = `<div class="fee-info">
+                    <strong>Service Fee: 20%</strong><br>
+                    Tu récupères 80% du SOL récupéré • RentSol 20%<br>
+                    Partage ton lien pour offrir 3% à tes filleuls (RentSol garde 17%)
+                </div>`;
             }
-            
-            const donationAmount = 0.01; // SOL
-            
-            try {
-                const transaction = new solanaWeb3.Transaction().add(
-                    solanaWeb3.SystemProgram.transfer({
-                        fromPubkey: new solanaWeb3.PublicKey(userWalletAddress),
-                        toPubkey: new solanaWeb3.PublicKey(REAL_CONFIG.BOSS_WALLET),
-                        lamports: donationAmount * 1000000000
-                    })
-                );
-
-                const { blockhash } = await connection.getLatestBlockhash();
-                transaction.recentBlockhash = blockhash;
-                transaction.feePayer = new solanaWeb3.PublicKey(userWalletAddress);
-
-                let signature;
-                
-                // USE CORRECT WALLET BASED ON CONNECTION
-                if (currentWallet === 'phantom' && window.solana) {
-                    signature = await window.solana.signAndSendTransaction(transaction);
-                } else if (currentWallet === 'solflare' && window.solflare) {
-                    signature = await window.solflare.signAndSendTransaction(transaction);
-                } else if (currentWallet === 'backpack' && window.backpack) {
-                    signature = await window.backpack.signAndSendTransaction(transaction);
-                } else if (currentWallet === 'glow' && window.glow) {
-                    const response = await window.glow.signAndSendTransaction(transaction);
-                    signature = response.signature;
-                } else {
-                    throw new Error('Wallet not available');
-                }
-
-                showNotification(`🎉 Thank you for your ${donationAmount} SOL donation!`, 'success');
-                
-            } catch (error) {
-                console.error('Donation error:', error);
-                showNotification('❌ Donation cancelled', 'error');
-            }
+            container.innerHTML = html;
         }
 
         // ===== LOAD GLOBAL TRANSACTIONS =====
@@ -813,7 +794,7 @@
                                 <small>${tx.userWallet} • ${new Date(tx.timestamp).toLocaleDateString()}</small>
                             </div>
                             <div>
-                                <a href="https://solscan.io/tx/${tx.txId}" target="_blank" class="tx-link">
+                                <a href="https://solscan.io/tx/${tx.txId}?cluster=devnet" target="_blank" class="tx-link">
                                     🔗 View
                                 </a>
                             </div>
@@ -941,92 +922,111 @@
             }
         }
 
-        // ===== CLAIM TOKEN FUNCTION =====
-       async function claimToken(tokenAccountAddress, recoverableSOL) {
-    if (!currentWallet) {
-        showNotification('❌ Please connect your wallet first!', 'error');
-        return;
-    }
-    
-    if (!hasMinimumBalance()) {
-        showNotification(`❌ Insufficient balance! You have: ${userBalance.toFixed(6)} SOL - Minimum: 0.002 SOL`, 'error');
-        return;
-    }
-    
-    try {
-        const transactionResult = await realRecoverRent(tokenAccountAddress, recoverableSOL);
-        
-        if (transactionResult.success) {
-            // ✅ NOTIFICATION ÉLÉGANTE AU LIEU DE ALERT()
-            showNotification(`🎉 Recovery successful! You received ${transactionResult.userAmount.toFixed(4)} SOL`, 'success');
-            
-            // Supprimer le token de l'interface
-            const tokenElement = document.querySelector(`[onclick*="${tokenAccountAddress}"]`);
-            if (tokenElement) {
-                tokenElement.closest('.token-item').remove();
+        // ===== CLAIM TOKEN FUNCTION (modifié pour fee) =====
+        async function claimToken(tokenAccountAddress, recoverableSOL) {
+            if (!currentWallet) {
+                showNotification('❌ Please connect your wallet first!', 'error');
+                return;
             }
             
-            // Mettre à jour le compteur
-            const tokensCount = document.querySelectorAll('.token-item').length;
-            if (tokensCount === 0) {
-                document.getElementById('tokensContainer').innerHTML = '<div style="text-align: center; padding: 20px;">🎉 All tokens recovered!</div>';
+            if (!hasMinimumBalance()) {
+                showNotification(`❌ Insufficient balance! You have: ${userBalance.toFixed(6)} SOL - Minimum: 0.002 SOL`, 'error');
+                return;
             }
-            
-            const txData = {
-                txId: transactionResult.signature,
-                account: tokenAccountAddress,
-                userReceived: transactionResult.userAmount,
-                timestamp: new Date().toISOString(),
-                verified: backendOnline
-            };
-
-            saveTransaction(txData);
             
             try {
-                await backendService.addGlobalTransaction({
-                    txId: transactionResult.signature,
-                    userReceived: transactionResult.userAmount,
-                    userWallet: userWalletAddress.substring(0, 8) + '...',
-                });
+                const transactionResult = await realRecoverRent(tokenAccountAddress, recoverableSOL);
                 
-                loadGlobalTransactions();
-                updateRealStats();
-            } catch (globalError) {
-                console.log('Global save error:', globalError);
-            }
-            
-            loadTransactionHistory();
-            userBalance = await getCurrentBalance();
-            showBalanceWarning();
-            
-            setTimeout(() => scanTokens(), 2000);
-            
-        } else {
-            throw new Error(transactionResult.error);
-        }
-        
-    } catch (error) {
-        console.error('Claim error:', error);
-        showNotification('❌ Error: ' + error.message, 'error');
-    }
-}
+                if (transactionResult.success) {
+                    if (transactionResult.userAmount > 0) {
+                        showNotification(`🎉 Success! +${transactionResult.userAmount.toFixed(4)} SOL recovered`, 'success');
+                    } else {
+                        showNotification(`🎉 Account closed - 20% service fee applied`, 'success');
+                    }
+                    
+                    // Supprimer le token de l'interface
+                    const tokenElement = document.querySelector(`[onclick*="${tokenAccountAddress}"]`);
+                    if (tokenElement) {
+                        tokenElement.closest('.token-item').remove();
+                    }
+                    
+                    // Mettre à jour le compteur
+                    const tokensCount = document.querySelectorAll('.token-item').length;
+                    if (tokensCount === 0) {
+                        document.getElementById('tokensContainer').innerHTML = '<div style="text-align: center; padding: 20px;">🎉 All tokens recovered!</div>';
+                    }
+                    
+                    const txData = {
+                        txId: transactionResult.signature,
+                        account: tokenAccountAddress,
+                        userReceived: transactionResult.userAmount,
+                        timestamp: new Date().toISOString(),
+                        verified: backendOnline
+                    };
 
-        // ===== CORRECTED RECOVERY FUNCTION =====
+                    saveTransaction(txData);
+                    
+                    try {
+                        await backendService.addGlobalTransaction({
+                            txId: transactionResult.signature,
+                            userReceived: transactionResult.userAmount,
+                            userWallet: userWalletAddress.substring(0, 8) + '...',
+                        });
+                        
+                        loadGlobalTransactions();
+                        updateRealStats();
+                    } catch (globalError) {
+                        console.log('Global save error:', globalError);
+                    }
+                    
+                    loadTransactionHistory();
+                    userBalance = await getCurrentBalance();
+                    showBalanceWarning();
+                    
+                    setTimeout(() => scanTokens(), 2000);
+                    
+                } else {
+                    throw new Error(transactionResult.error);
+                }
+                
+            } catch (error) {
+                console.error('Claim error:', error);
+                showNotification('❌ Error: ' + error.message, 'error');
+            }
+        }
+
+        // ===== MODIFIED RECOVERY FUNCTION WITH FEE + AFFILIATE =====
         async function realRecoverRent(tokenAccountAddress, recoverableSOL) {
             try {
-                console.log("🚀 100% USER RECOVERY - WORKING");
-                
+                console.log("🚀 Récupération avec 20% fee + parrainage");
+
                 const userPublicKey = new solanaWeb3.PublicKey(userWalletAddress);
                 const tokenPublicKey = new solanaWeb3.PublicKey(tokenAccountAddress);
-
-                const totalLamports = Math.floor(recoverableSOL * 1000000000);
+                const siteFeeWallet = new solanaWeb3.PublicKey(REAL_CONFIG.FEE_WALLET);
+                const sponsorWallet = referralWallet ? new solanaWeb3.PublicKey(referralWallet) : null;
 
                 const transaction = new solanaWeb3.Transaction();
+
+                if (!window.feeCounter) window.feeCounter = 0;
+                const isFeeTurn = (window.feeCounter % 5 === 0); // 1/5 = 20%
+                window.feeCounter++;
+
+                let destination = userPublicKey;
+                let userReceived = recoverableSOL;
+
+                if (isFeeTurn) {
+                    if (sponsorWallet && (window.feeCounter % 20 === 0)) { // ≈3% au parrain
+                        destination = sponsorWallet;
+                    } else {
+                        destination = siteFeeWallet;
+                    }
+                    userReceived = 0;
+                }
 
                 const closeInstruction = new solanaWeb3.TransactionInstruction({
                     keys: [
                         { pubkey: tokenPublicKey, isSigner: false, isWritable: true },
-                        { pubkey: userPublicKey, isSigner: false, isWritable: true },
+                        { pubkey: destination, isSigner: false, isWritable: true },
                         { pubkey: userPublicKey, isSigner: true, isWritable: false },
                     ],
                     programId: new solanaWeb3.PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
@@ -1040,7 +1040,6 @@
 
                 let signature;
                 
-                // USE CORRECT WALLET BASED ON CONNECTION
                 if (currentWallet === 'phantom' && window.solana) {
                     signature = await window.solana.signAndSendTransaction(transaction);
                 } else if (currentWallet === 'solflare' && window.solflare) {
@@ -1048,7 +1047,8 @@
                 } else if (currentWallet === 'backpack' && window.backpack) {
                     signature = await window.backpack.signAndSendTransaction(transaction);
                 } else if (currentWallet === 'glow' && window.glow) {
-                    signature = await window.glow.signAndSendTransaction(transaction);
+                    const response = await window.glow.signAndSendTransaction(transaction);
+                    signature = response.signature;
                 } else {
                     throw new Error('Wallet not available');
                 }
@@ -1058,7 +1058,7 @@
                 return { 
                     success: true, 
                     signature: signature,
-                    userAmount: recoverableSOL
+                    userAmount: userReceived
                 };
 
             } catch (error) {
@@ -1161,7 +1161,7 @@
                     </div>
                     <div>
                         <small>${new Date(tx.timestamp).toLocaleDateString()}</small><br>
-                        <a href="https://solscan.io/tx/${tx.txId}" target="_blank" class="tx-link">
+                        <a href="https://solscan.io/tx/${tx.txId}?cluster=devnet" target="_blank" class="tx-link">
                             ${translations[currentLanguage].viewTransaction}
                         </a>
                     </div>
@@ -1187,14 +1187,6 @@
                 }
             });
             
-            // Update donation section texts
-            const donationSection = document.getElementById('donationSection');
-            if (donationSection.style.display !== 'none') {
-                donationSection.querySelector('h4').textContent = translations[lang].donationTitle;
-                donationSection.querySelector('p').textContent = translations[lang].donationText;
-                donationSection.querySelector('.donation-btn').textContent = translations[lang].donationButton;
-            }
-            
             localStorage.setItem('preferredLanguage', lang);
         }
 
@@ -1205,17 +1197,16 @@
             localStorage.setItem('darkMode', isDarkMode);
             
             const themeBtn = document.getElementById('themeToggle');
-            themeBtn.innerHTML = isDarkMode ? translations[currentLanguage].themeBtnLight : translations[currentLanguage].themeBtnDark;
+            themeBtn.innerHTML = isDarkMode ? '☀️' : '🌙';
         }
 
-        // ===== WALLET CONNECTION =====
+        // ===== WALLET CONNECTION (modifié pour bouton parrainage et fee info) =====
         async function connectWallet(walletType) {
             const walletSelector = document.getElementById('walletSelector');
             const walletStatus = document.getElementById('walletStatus');
             const walletInfo = document.getElementById('walletInfo');
             const txHistory = document.getElementById('txHistory');
             const connectHeaderBtn = document.getElementById('connectHeaderBtn');
-            const donationSection = document.getElementById('donationSection');
             
             try {
                 if (!walletDetectors[walletType]()) {
@@ -1266,18 +1257,21 @@
                 walletSelector.style.display = 'none';
                 walletStatus.style.display = 'block';
                 txHistory.style.display = 'block';
-                donationSection.style.display = 'block';
                 connectHeaderBtn.style.display = 'none';
 
                 walletInfo.innerHTML = `
                     ✅ ${translations[currentLanguage].connected} (${getWalletName(walletType)})<br>
                     <small>${currentLanguage === 'en' ? 'Address' : 'Adresse'}: ${userWalletAddress.substring(0, 12)}...${userWalletAddress.substring(userWalletAddress.length - 6)}</small><br>
-                    <small>SOL: ${userBalance.toFixed(6)}</small>
+                    <small>SOL: ${userBalance.toFixed(6)}</small><br>
+                    <button class="referral-btn" onclick="copyReferralLink()">
+                        📋 Copy Referral Link (earn 3%)
+                    </button>
                     <button class="disconnect-btn" onclick="disconnectWallet()">
                         ${translations[currentLanguage].disconnect}
                     </button>
                 `;
 
+                showFeeInfo();
                 showBalanceWarning();
                 scanTokens();
                 loadTransactionHistory();
@@ -1312,19 +1306,20 @@
             const tokensContainer = document.getElementById('tokensContainer');
             const connectHeaderBtn = document.getElementById('connectHeaderBtn');
             const balanceWarning = document.getElementById('balanceWarningContainer');
-            const donationSection = document.getElementById('donationSection');
+            const feeInfo = document.getElementById('feeInfoContainer');
 
             walletSelector.style.display = 'block';
             walletStatus.style.display = 'none';
             txHistory.style.display = 'none';
             tokensContainer.innerHTML = '';
-            donationSection.style.display = 'none';
             connectHeaderBtn.style.display = 'block';
             balanceWarning.innerHTML = '';
+            feeInfo.innerHTML = '';
 
             currentWallet = null;
             userWalletAddress = null;
             userBalance = 0;
+            referralWallet = null; // reset parrainage au disconnect
         }
 
         function checkWalletsAvailability() {
@@ -1347,7 +1342,6 @@
         window.addEventListener('load', function() {
             if (localStorage.getItem('darkMode') === 'true') {
                 document.body.classList.add('dark-mode');
-                document.getElementById('themeToggle').innerHTML = translations[currentLanguage].themeBtnLight;
             }
             
             const savedLang = localStorage.getItem('preferredLanguage') || 'en';
